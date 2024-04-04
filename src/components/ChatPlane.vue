@@ -17,7 +17,7 @@ let message = ref('');
 
 async function fetchData() {
   try {
-    const response = await axios.get('http://127.0.0.1:8000/api/rooms/all/1');
+    const response = await axios.get('http://localhost:8000/api/rooms/all/1');
 
     authUser.value = response.data.authUser;
     chatRooms.value = response.data.chatRooms;
@@ -42,13 +42,13 @@ onMounted(fetchData);
 
 // eslint-disable-next-line no-undef
 Echo.channel('newChannel')
-.listen('SendMessage', (response) => {
-  if (response.error) {
-    console.log('Echo Error: ', response.error);
-  } else {
-    console.log('Echo Response: ', response);
-    pushMessageToChat(response);
-  }
+    .listen('SendMessage', (response) => {
+      if (response.error) {
+        console.log('Echo Error: ', response.error);
+      } else {
+        console.log('Echo Response: ', response);
+        pushMessageToChat(response);
+      }
 })
 
 
@@ -57,12 +57,13 @@ function appendMessage() {
     console.log('appendMessage: ', message.value);
     sendMessage();
     message.value = '';
-    scrollToChatBottom();
+    // scrollToChatBottom();
   }
 }
 
 function scrollToChatBottom() {
   const chat = document.getElementById('chat');
+  console.log('scrollToChatBottom: ', chat);
   if (chat) {
     chat.scrollTop = chat.scrollHeight
   }
@@ -95,11 +96,14 @@ function pushMessageToChat(data) {
     "user_id": data.userId,
     "user_name": data.userName,
   });
+  setTimeout(()=>{
+    scrollToChatBottom();
+  }, 100);
 }
 
 </script>
 <template>
-  <div class="w-full h-full bg-[--vt-c-black-mute]">
+  <div class="flex-grow h-full bg-[--vt-c-black-mute]">
     <div class="h-full w-full flex flex-col">
       <div
           class="min-h-[6rem] border-b border-b-[--vt-c-divider-dark-1] py-3 px-5 flex gap-5 justify-between items-center">
@@ -129,12 +133,12 @@ function pushMessageToChat(data) {
       <div id="chat" class="flex-grow w-full bg-[#1a1a1e] overflow-y-auto">
         <div v-for="message in currentChat" :key="message.id"
              class="min-h-[6rem] gap-3 w-full px-12 py-4 flex items-end"
-             :class="{'flex-row-reverse ': message.user_id === authUser.id}">
+             :class="{'flex-row-reverse ': message.user_id == authUser.id}">
           <div class="h-fit translate-y-2">
             <img :src="'https://api.dicebear.com/5.x/bottts/svg?seed=User' + message.user_id" alt="avatar" class="w-8 h-8 rounded-full">
           </div>
           <div class="w-fit min-w-[12rem] max-w-[30rem] bg-gradient-to-r px-8 py-4 space-y-3 rounded-lg"
-               :class="{ 'from-sky-500 to-indigo-500': message.user_id !== authUser.id, 'from-violet-500 to-fuchsia-500': message.user_id === authUser.id, 'rounded-bl-none': message.user_id !== authUser.id, 'rounded-br-none': message.user_id === authUser.id }">
+               :class="{ 'from-sky-500 to-indigo-500': message.user_id !== authUser.id, 'from-violet-500 to-fuchsia-500': message.user_id == authUser.id, 'rounded-bl-none': message.user_id != authUser.id, 'rounded-br-none': message.user_id == authUser.id }">
             <div class="flex flex-row justify-between items-center">
               <h3 class="text-white font-semibold text-sm">{{ message.user_name }}</h3>
               <h3 class="text-gray-300 text-sm">{{ message.time }}</h3>
